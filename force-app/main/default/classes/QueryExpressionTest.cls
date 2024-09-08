@@ -104,4 +104,82 @@ private class QueryExpressionTest {
             System.debug(result);
         }           
     }
+
+    @isTest
+    private static void testException() {
+        try {
+            QueryExpression.LogicalOperator logicalOpr = new QueryExpression.LogicalOperator('');
+        } catch (QueryExpression.InvalidOperatorException ex) {
+            System.debug(ex.getMessage());
+        }
+
+        try {
+            QueryExpression.LogicalOperator logicalOpr = new QueryExpression.LogicalOperator('NAOPR');
+        } catch (QueryExpression.InvalidOperatorException ex) {
+            System.debug(ex.getMessage());
+        }
+
+        try {
+            QueryExpression.LiteralExpr literalExpr = new QueryExpression.LiteralExpr('NAOPR', null);
+            literalExpr.evaluate();
+        } catch (Exception ex) {
+            System.debug(ex.getMessage());
+        }
+
+        try {
+            QueryExpression.VariableExpr varExpr = new QueryExpression.VariableExpr('NAOPR', null);
+            varExpr.evaluate();
+        } catch (Exception ex) {
+            System.debug(ex.getMessage());
+        }
+
+        try {
+            QueryExpression.GroupExpr grpExpr = new QueryExpression.GroupExpr(new QueryExpression.LiteralExpr('Ab', null) , null);
+            grpExpr.evaluate();
+        } catch (Exception ex) {
+            System.debug(ex.getMessage());
+        }
+        
+        try {
+            QueryExpression.CollectionExpr colExpr = new QueryExpression.CollectionExpr(null);
+            colExpr.evaluate();
+        } catch (Exception ex) {
+            System.debug(ex.getMessage());
+        }
+
+        try {
+            QueryExpression.FuctionExpr funcExpr = new QueryExpression.FuctionExpr('NAOPR', null);
+            funcExpr.evaluate();
+        } catch (Exception ex) {
+            System.debug(ex.getMessage());
+        }        
+
+
+        try {
+            QueryExpression.LogicalExpr logicalExpr = new QueryExpression.LogicalExpr(null, 'NOT', null);
+            logicalExpr.addRightOperand(new QueryExpression.LiteralExpr('false', null));
+            logicalExpr.toString();
+            logicalExpr.evaluate();
+
+            logicalExpr = new QueryExpression.LogicalExpr(null, '>', null);
+            logicalExpr.compare('>', null, null);
+        } catch (Exception ex) {
+            System.debug(ex.getMessage());
+        } 
+        try {
+            QueryExpression.LogicalExpr logicalExpr = new QueryExpression.LogicalExpr(null, '>', null);
+            logicalExpr.compare('>', 'abc', null);
+
+        } catch (Exception ex) {
+            System.debug(ex.getMessage());
+        }  
+        try {
+            QueryExpression.LogicalExpr logicalExpr = new QueryExpression.LogicalExpr(null, '>', null);
+            logicalExpr.getDataType(new QueryExpression.FuctionExpr('NAOPR', null));
+
+        } catch (Exception ex) {
+            System.debug(ex.getMessage());
+        }         
+    }
+
 }

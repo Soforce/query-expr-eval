@@ -52,18 +52,6 @@ public with sharing abstract class QueryExpression {
      * 
      */
     public String getDataType(Object value) {
-        // if (literal == 'null') return null;
-        // else if (literal == 'true' || literal == 'false') return Boolean.valueOf(literal);
-        // else if (literal.startsWith('\'') && literal.endsWith('\'')) return literal.substring(1, literal.length() - 1);
-        // else if (literal.isNumeric()) return Long.valueOf(literal);
-        // else if (Pattern.matches('^(([0-9]*)|(([0-9]*)\\.([0-9]*)))$', literal)) return Double.valueOf(literal);
-        // else if (Pattern.matches('^(\\d{4})\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01]) ([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])$', literal)) {
-        //     return Datetime.valueOf(literal);
-        // } else if (Pattern.matches('^(\\d{4})\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01])$', literal)) {
-        //     return Date.valueOf(literal);
-        // } else {
-        //     return this.literal;
-        // }
         if (value instanceOf Boolean) return 'Boolean';
         else if (value instanceOf Date) return 'Date';
         else if (value instanceOf Datetime) return 'Datetime';
@@ -240,10 +228,6 @@ public with sharing abstract class QueryExpression {
             } else if (literal.isNumeric()) return Long.valueOf(literal);
             else if (Pattern.matches('^(([0-9]*)|(([0-9]*)\\.([0-9]*)))$', literal)) {
                 return Double.valueOf(literal);
-            // } else if (Pattern.matches('^(\\d{4})\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01]) ([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])$', literal)) {
-            //     return Datetime.valueOf(literal);
-            // } else if (Pattern.matches('^(\\d{4})\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01])$', literal)) {
-            //     return Date.valueOf(literal);
             } else {
                 return this.literal;
             }
@@ -284,7 +268,8 @@ public with sharing abstract class QueryExpression {
             this.leftOperand = leftOperand;
             this.operator = new LogicalOperator(operatorText);
 
-            this.leftOperand.parent = this;
+            if (this.leftOperand != null)
+                this.leftOperand.parent = this;
         }
 
 
