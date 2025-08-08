@@ -23,3 +23,17 @@ System.debug(r);
 String p = '^(\\d{4})\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01])$';
 Boolean r = Pattern.matches(p, '1992-13-12');
 System.debug(r);
+
+{
+    SObjectQueryExprPlugin plugin = new SObjectQueryExprPlugin();
+    String exprString = 'AssistantName Like \'%Jyue\' AND Title=\'Mr.\'';
+    // String exprString = 'A = B AND (C>10 OR FF=$User.name) OR Func(2, 10)=TRUE';
+    QueryExpressionParser parser = new QueryExpressionParser(exprString);
+    QueryExpression expr = parser.parse(new SObjectQueryExprPlugin());
+    Contact c = new Contact(
+        AssistantName = 'Jyue@salesforce.com',
+        Title = 'Mr.'
+    );
+    System.debug(expr.toString());
+    System.debug(expr.evaluate(c));
+}

@@ -13,8 +13,8 @@ public with sharing abstract class QueryExpression {
      * @description Evaluator to evaluate variables
      */
     public interface IExpressionProcessorPlugin {
-        Object evaluateVar(String varName);
-        Object evaluateFunc(String funcName, List<Object> params);
+        Object evaluateVar(String varName, Object context);
+        Object evaluateFunc(String funcName, List<Object> params, Object context);
     } 
 
     
@@ -46,7 +46,10 @@ public with sharing abstract class QueryExpression {
     protected IExpressionProcessorPlugin plugin;
 
     // Evaluate the result 
-    public abstract Object evaluate();
+    public abstract Object evaluate(Object context);
+    public virtual Object evaluate() {
+        return evaluate(null);
+    }    
 
     /**
      * 
@@ -212,7 +215,7 @@ public with sharing abstract class QueryExpression {
         }
 
 
-        public override Object evaluate() {
+        public override Object evaluate(Object context) {
             
             if (literal == 'null') return null;
             else if (literal == 'true' || literal == 'false') return Boolean.valueOf(literal);
@@ -249,9 +252,9 @@ public with sharing abstract class QueryExpression {
             return variable;
         }
 
-        public override Object evaluate() {
+        public override Object evaluate(Object context) {
             // TfB_DebugLog.logVar('variable', variable);
-            return this.plugin.evaluateVar(variable);
+            return this.plugin.evaluateVar(variable, context);
         }
     }
 
@@ -293,9 +296,9 @@ public with sharing abstract class QueryExpression {
             return operator.getPrecedence();
         }
 
-        public override Object evaluate() {
-            Object leftOpdVal = leftOperand?.evaluate();
-            Object rightOpdVal = rightOperand.evaluate();
+        public override Object evaluate(Object context) {
+            Object leftOpdVal = leftOperand?.evaluate(context);
+            Object rightOpdVal = rightOperand.evaluate(context);
 
             // TfB_DebugLog.logFine('LogicalExpr.evaluate: ' + leftOpdVal + ', ' + rightOpdVal);
             switch on operator.oprText.toUpperCase() {
@@ -314,7 +317,15 @@ public with sharing abstract class QueryExpression {
                     if (leftOpdVal instanceOf String && rightOpdVal instanceOf String) {
                         String leftVal = (String)leftOpdVal;
                         String rightVal = (String)rightOpdVal;
-                        return leftVal == rightVal || rightVal.contains(leftVal);
+                        if (rightVal.startsWith('%') && rightVal.endsWith('%')) {
+                            return leftVal.contains(rightVal.substring(1, rightVal.length() - 1));
+                        } else if (rightVal.startsWith('%')) {
+                            return leftVal.endsWith(rightVal.substring(1));
+                        } else if (rightVal.endsWith('%')) {
+                            return leftVal.startsWith(rightVal.left(rightVal.length() - 1));
+                        } else {
+                            return leftVal == rightVal;
+                        }
                     }
                 }
                 when 'IN', 'NOT IN' {
@@ -360,8 +371,8 @@ public with sharing abstract class QueryExpression {
             return '(' + groupExpr.toString() + ')';
         }
 
-        public override Object evaluate() {
-            return groupExpr.evaluate();
+        public override Object evaluate(Object context) {
+            return groupExpr.evaluate(context);
         }
     }
 
@@ -391,10 +402,10 @@ public with sharing abstract class QueryExpression {
             return '(' + String.join(params, ', ') + ')';
         }
 
-        public override Object evaluate() {
+        public override Object evaluate(Object context) {
             List<Object> valueList = new List<Object>();
             for (QueryExpression paramExpr : paramExprList) {
-                valueList.add(paramExpr.evaluate());
+                valueList.add(paramExpr.evaluate(context));
             }
             return valueList;
         }
@@ -428,13 +439,13 @@ public with sharing abstract class QueryExpression {
             return functionName + '(' + String.join(params, ', ') + ')';
         }
 
-        public override Object evaluate() {
+        public override Object evaluate(Object context) {
             List<Object> params = new List<Object>();
             for (QueryExpression paramExpr : this.paramExprList) {
-                params.add(paramExpr.evaluate());
+                params.add(paramExpr.evaluate(context));
             }
 
-            return this.plugin.evaluateFunc(functionName, params);
+            return this.plugin.evaluateFunc(functionName, params, context);
         }
     }    
 
