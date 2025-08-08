@@ -37,3 +37,22 @@ System.debug(r);
     System.debug(expr.toString());
     System.debug(expr.evaluate(c));
 }
+
+{
+    String exprString = 'AssistantName Like \'%Test%\' AND Title=\'Mr.\' AND Account.Name=\'Soforce\'';
+    // String exprString = 'Account.Name=\'Soforce1\'';
+    QueryExpression expr = QueryExpression.build(exprString);
+    Contact c = new Contact(
+        AssistantName = 'Test@soforce.com',
+        Title = 'Mr.'
+    );
+    Account parentAccount = new Account(
+        Name = 'Soforce'
+    );
+    c.putSObject('Account', parentAccount);
+    System.debug(expr.evaluate(c));
+
+
+
+
+}
