@@ -54,5 +54,26 @@ System.debug(r);
 
 
 
+String iPhone16Formula = 'Name LIKE \'iPhone 16%\' AND vlocity_cmt__SubType__c=\'Device\'';
+QueryExpression expr = QueryExpression.build(iPhone16Formula);
+Product2 p = new Product2(
+    vlocity_cmt__SubType__c='Device',
+    Name = 'iPhone 16 256GB Black'
+);
+System.debug(expr.evaluate(p)); // True
 
-}
+
+
+FormulaEval.FormulaInstance ff = Formula.builder()
+    .withType(Schema.Product2.class)
+    .withReturnType(FormulaEval.FormulaReturnType.BOOLEAN)
+    .withFormula('TEXT(vlocity_cmt__SubType__c)="Device" && CONTAINS(Name,"iPhone 16")')
+    .build();
+
+
+Product2 p = new Product2(
+    vlocity_cmt__SubType__c='Device',
+    Name = 'iPhone 16 256GB Black'
+);
+
+System.debug(ff.evaluate(p)); // True

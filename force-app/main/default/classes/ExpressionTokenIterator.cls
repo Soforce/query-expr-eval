@@ -112,6 +112,15 @@ public with sharing class ExpressionTokenIterator implements Iterator<Expression
                     ch = expressionChars[++idx];
                 }
                 tokenChars.add(ch); // the closing single quote
+            } else if (ch == 34) { // double quote "
+                tokenChars.add(ch);
+                // Find the right double quote to close 
+                ch = expressionChars[++idx];
+                while (ch != 34 || (ch == 34 && expressionChars[idx-1] == 92)) { // Not double quote or escapted double quote
+                    tokenChars.add(ch);
+                    ch = expressionChars[++idx];
+                }
+                tokenChars.add(ch); // the closing single quote
             } else if (ch == 61 || ch == 60 || ch == 62 || ch == 33) { // =, <, > ! operators
                 if (tokenChars.size() > 0) {
                     expressionTokens.add(new Token(tokenChars));
@@ -181,7 +190,7 @@ public with sharing class ExpressionTokenIterator implements Iterator<Expression
                 when else {
                     if (this.tokenText.endsWith('(')) {
                         this.tokenType = ExpressionTokenType.FunctionStart;
-                    } else if (tokenText.isNumeric() || tokenText.startsWith('\'')) {
+                    } else if (tokenText.isNumeric() || tokenText.startsWith('\'') || tokenText.startsWith('"')) {
                         this.tokenType = ExpressionTokenType.Literal;
                     } else {
                         try {

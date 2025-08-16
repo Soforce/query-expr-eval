@@ -460,7 +460,7 @@ public with sharing abstract class QueryExpression {
     //     return parser.parse(null);
     // }
 
-    public static QueryExpression build(String expression, SObjectQueryExprPlugin plugin) {
+    public static QueryExpression build(String expression, IExpressionProcessorPlugin plugin) {
         if (plugin == null ) plugin = new SObjectQueryExprPlugin();
         QueryExpressionParser parser = new QueryExpressionParser(expression);
         QueryExpression expr = parser.parse(plugin);
