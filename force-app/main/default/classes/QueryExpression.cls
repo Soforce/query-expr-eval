@@ -211,7 +211,8 @@ public with sharing abstract class QueryExpression {
         }
 
         public override String toString() {
-            return literal;
+            if (literal.startsWith('"') && literal.endsWith('"')) return '\'' + literal.substring(1, literal.length() - 1) + '\'';
+            else return literal;
         }
 
 
@@ -219,7 +220,7 @@ public with sharing abstract class QueryExpression {
             
             if (literal == 'null') return null;
             else if (literal == 'true' || literal == 'false') return Boolean.valueOf(literal);
-            else if (literal.startsWith('\'') && literal.endsWith('\'')) {
+            else if ((literal.startsWith('\'') && literal.endsWith('\'')) || (literal.startsWith('"') && literal.endsWith('"'))) {
                 String value = literal.substring(1, literal.length() - 1);
                 if (Pattern.matches('^(\\d{4})\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01]) ([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])$', value)) {
                     return Datetime.valueOf(value);
