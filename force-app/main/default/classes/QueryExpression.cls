@@ -17,6 +17,13 @@ public with sharing abstract class QueryExpression {
         Object evaluateFunc(String funcName, List<Object> params, Object context);
     } 
 
+    /**
+     * @description Evaluator to evaluate variables
+     */
+    public interface IExpressionQueryPlugin {
+        String buildQuery(String query);
+    }
+
     
     /**
      * @description OperatorType enum for the Query/Logical Expression 
@@ -50,6 +57,11 @@ public with sharing abstract class QueryExpression {
     public virtual Object evaluate() {
         return evaluate(null);
     }    
+
+    /**
+     * build Query string
+     */
+    public abstract String toQuery(IExpressionQueryPlugin queryPlugin);    
 
     /**
      * 
@@ -215,6 +227,10 @@ public with sharing abstract class QueryExpression {
             else return literal;
         }
 
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            if (queryPlugin != null) return queryPlugin.buildQuery(toString());
+            return toString();
+        }
 
         public override Object evaluate(Object context) {
             
@@ -252,6 +268,13 @@ public with sharing abstract class QueryExpression {
         public override String toString() {
             return variable;
         }
+
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            // if (this.plugin == null) return toString();
+            // else return this.plugin.getSObjectFieldName(variable);
+            if (queryPlugin != null) return queryPlugin.buildQuery(toString());
+            return toString();            
+        }        
 
         public override Object evaluate(Object context) {
             // TfB_DebugLog.logVar('variable', variable);
@@ -292,6 +315,13 @@ public with sharing abstract class QueryExpression {
             }
         }
 
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            if (leftOperand == null) {
+                return operator.toString() + ' ' + rightOperand.toQuery(queryPlugin);    
+            } else {
+                return leftOperand.toQuery(queryPlugin) + ' ' + operator.toString() + ' ' + rightOperand.toQuery(queryPlugin);    
+            }
+        }
 
         public Integer getOperatorPrecedence() {
             return operator.getPrecedence();
@@ -372,6 +402,10 @@ public with sharing abstract class QueryExpression {
             return '(' + groupExpr.toString() + ')';
         }
 
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            return '(' + groupExpr.toQuery(queryPlugin) + ')';
+        }
+
         public override Object evaluate(Object context) {
             return groupExpr.evaluate(context);
         }
@@ -398,6 +432,15 @@ public with sharing abstract class QueryExpression {
             List<String> params = new List<String>();
             for (QueryExpression paramExpr : paramExprList) {
                 params.add(paramExpr.toString());
+            }
+
+            return '(' + String.join(params, ', ') + ')';
+        }
+
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            List<String> params = new List<String>();
+            for (QueryExpression paramExpr : paramExprList) {
+                params.add(paramExpr.toQuery(queryPlugin));
             }
 
             return '(' + String.join(params, ', ') + ')';
@@ -435,6 +478,15 @@ public with sharing abstract class QueryExpression {
             List<String> params = new List<String>();
             for (QueryExpression paramExpr : paramExprList) {
                 params.add(paramExpr.toString());
+            }
+
+            return functionName + '(' + String.join(params, ', ') + ')';
+        }
+
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            List<String> params = new List<String>();
+            for (QueryExpression paramExpr : paramExprList) {
+                params.add(paramExpr.toQuery(queryPlugin));
             }
 
             return functionName + '(' + String.join(params, ', ') + ')';
