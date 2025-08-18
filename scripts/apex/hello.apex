@@ -5,75 +5,32 @@
 // You can also execute the entire file by running the command:
 //     SFDX: Execute Anonymous Apex with Editor Contents
 
-string tempvar = 'Enter_your_name_here';
-System.debug('Hello World!');
-System.debug('My name is ' + tempvar);
-
-String exprString = 'A = B AND (C>10 OR FF=$User.name) OR Func(2, 10)=TRUE';
-QueryExpressionParser parser = new QueryExpressionParser(exprString);
-QueryExpression expr = parser.parse(null);
-System.debug(expr.toString());
-
-Datetime.valueOf()
-
-String p = '^(\\d{4})\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01]) ([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])$';
-Boolean r = Pattern.matches(p, '1992-10-12 23:12:12');
-System.debug(r);
-
-String p = '^(\\d{4})\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01])$';
-Boolean r = Pattern.matches(p, '1992-13-12');
-System.debug(r);
-
 {
-    SObjectQueryExprPlugin plugin = new SObjectQueryExprPlugin();
-    String exprString = 'AssistantName Like \'%Jyue\' AND Title=\'Mr.\'';
-    // String exprString = 'A = B AND (C>10 OR FF=$User.name) OR Func(2, 10)=TRUE';
-    QueryExpressionParser parser = new QueryExpressionParser(exprString);
-    QueryExpression expr = parser.parse(new SObjectQueryExprPlugin());
-    Contact c = new Contact(
-        AssistantName = 'Jyue@salesforce.com',
-        Title = 'Mr.'
-    );
-    System.debug(expr.toString());
-    System.debug(expr.evaluate(c));
+    String queryFormula = '$User.FirstName="Justin"';
+    QueryExpression expr = QueryExpression.build(queryFormula);
+    System.debug(expr.evaluate());
 }
 
 {
-    String exprString = 'AssistantName Like \'%Test%\' AND Title=\'Mr.\' AND Account.Name=\'Soforce\'';
-    // String exprString = 'Account.Name=\'Soforce1\'';
-    QueryExpression expr = QueryExpression.build(exprString);
-    Contact c = new Contact(
-        AssistantName = 'Test@soforce.com',
-        Title = 'Mr.'
+    String queryFormula = '$User.FirstName="Justin" AND $Organization.Name="Demo Company" AND ProductCode="iPhone_15_0001" AND Name Like "iPhone%"';
+    QueryExpression expr = QueryExpression.build(queryFormula);
+    Product2 p = new Product2(
+        ProductCode = 'iPhone_15_0001',
+        Name = 'iPhone 15 256GB Black'
     );
-    Account parentAccount = new Account(
-        Name = 'Soforce'
-    );
-    c.putSObject('Account', parentAccount);
-    System.debug(expr.evaluate(c));
+    System.debug(expr.evaluate(p));
 
+}
 
+{
+    String queryFormula = 'ProductCode="iPhone_15_0001" AND Name Like "iPhone%"';
+    QueryExpression expr = QueryExpression.build(queryFormula);
+    // Product2 p = new Product2(
+    //     ProductCode = 'iPhone_15_0001',
+    //     Name = 'iPhone 15 256GB Black'
+    // );
+    SObjectQueryExprPlugin queryPlugin = new SObjectQueryExprPlugin('Product2');
+    System.debug(expr.toQuery(queryPlugin));
 
-String iPhone16Formula = 'Name LIKE \'iPhone 16%\' AND vlocity_cmt__SubType__c=\'Device\'';
-QueryExpression expr = QueryExpression.build(iPhone16Formula);
-Product2 p = new Product2(
-    vlocity_cmt__SubType__c='Device',
-    Name = 'iPhone 16 256GB Black'
-);
-System.debug(expr.evaluate(p)); // True
+}
 
-
-
-FormulaEval.FormulaInstance ff = Formula.builder()
-    .withType(Schema.Product2.class)
-    .withReturnType(FormulaEval.FormulaReturnType.BOOLEAN)
-    .withFormula('TEXT(vlocity_cmt__SubType__c)="Device" && CONTAINS(Name,"iPhone 16")')
-    .build();
-
-
-Product2 p = new Product2(
-    vlocity_cmt__SubType__c='Device',
-    Name = 'iPhone 16 256GB Black'
-);
-
-System.debug(ff.evaluate(p)); // True

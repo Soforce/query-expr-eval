@@ -195,12 +195,13 @@ public with sharing virtual class QueryExpressionParser {
      * @description
      */
     public class FunctionExprParser extends QueryExpressionParser {
-        QueryExpression.FuctionExpr funcExpr;
+        QueryExpression.FunctionExpr funcExpr;
+
 
         public FunctionExprParser(ExpressionTokenIterator tokenIterator, String functionToken, QueryExpression.IExpressionProcessorPlugin plugin) {
             super(tokenIterator);
 
-            funcExpr = new QueryExpression.FuctionExpr(functionToken.left(functionToken.length() - 1), plugin);
+            funcExpr = new QueryExpression.FunctionExpr(functionToken.left(functionToken.length() - 1), plugin);
         }
 
         protected override QueryExpression processGroupStopToken(QueryExpression operand, QueryExpression.IExpressionProcessorPlugin plugin) {
