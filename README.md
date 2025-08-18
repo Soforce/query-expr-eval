@@ -31,7 +31,7 @@ The QueryExpression class constructs and evaluates a query’s logical expressio
 
 ### QueryExpression Methods
 
-* [build(expr)](#buildexpr)
+* [build(expr)](#buildexpr) 
   Parse the query expression string.
 * [build(expr, plugin)](#buildexpr-plugin)
   Parse the query expression string.
