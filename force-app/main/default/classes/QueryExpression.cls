@@ -17,6 +17,13 @@ public with sharing abstract class QueryExpression {
         Object evaluateFunc(String funcName, List<Object> params, Object context);
     } 
 
+    /**
+     * @description Evaluator to evaluate variables
+     */
+    public interface IExpressionQueryPlugin {
+        String buildQuery(String query, QueryExpression expr);
+    }
+
     
     /**
      * @description OperatorType enum for the Query/Logical Expression 
@@ -52,6 +59,11 @@ public with sharing abstract class QueryExpression {
     }    
 
     /**
+     * build Query string
+     */
+    public abstract String toQuery(IExpressionQueryPlugin queryPlugin);    
+
+    /**
      * 
      */
     public String getDataType(Object value) {
@@ -72,17 +84,17 @@ public with sharing abstract class QueryExpression {
     /**
      * @descrptin Helper method for comparison operator, >, >=, <, <=
      */
-    public Boolean compare(String operator, Object leftVal, Object rightVal) {
+    public Boolean compare(String operator, Object leftVal, Object rightVal, QueryExpression queryExpr) {
         if (leftVal == null && rightVal == null) {
             if (operator == '=') return true;
             else if (operator == '!=') return false;
             else 
-                throw new NotSupportedException('The ' + operator + ' operator does not support NULL operand.');
+                throw new NotSupportedException('The ' + operator + ' operator does not support NULL operand for the "' + queryExpr.toString() + '" expression.');
         } else if (leftVal == null || rightVal == null) {
             if (operator == '=') return false;
             else if (operator == '!=') return true;
             else 
-                throw new NotSupportedException('The ' + operator + ' operator does not support NULL operand.');            
+                throw new NotSupportedException('The ' + operator + ' operator does not support NULL operand for the "' + queryExpr.toString() + '" expression.');  
         }
 
         String dataType = getDataType(leftVal);
@@ -148,6 +160,7 @@ public with sharing abstract class QueryExpression {
             // when 'Time' {
             //     if (operator == '>') return (Time)leftVal > (Time)rightVal;
             //     else if (operator == '>=') return (Time)leftVal >= (Time)rightVal;
+
             //     else if (operator == '<') return (Time)leftVal < (Time)rightVal;
             //     else if (operator == '<=') return (Time)leftVal <= (Time)rightVal;
             //     else throw new InvalidOperatorException();                       
@@ -155,7 +168,7 @@ public with sharing abstract class QueryExpression {
 
 
         }
-        throw new NotSupportedException('The ' + operator + ' operator does not support ' + dataType + ' value.');
+        throw new NotSupportedException('The ' + operator + ' operator does not support ' + dataType + ' value for the "' + queryExpr.toString() + '" expression.');
     }
 
 
@@ -215,6 +228,10 @@ public with sharing abstract class QueryExpression {
             else return literal;
         }
 
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            if (queryPlugin != null) return queryPlugin.buildQuery(toString(), this);
+            return toString();
+        }
 
         public override Object evaluate(Object context) {
             
@@ -252,6 +269,13 @@ public with sharing abstract class QueryExpression {
         public override String toString() {
             return variable;
         }
+
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            // if (this.plugin == null) return toString();
+            // else return this.plugin.getSObjectFieldName(variable);
+            if (queryPlugin != null) return queryPlugin.buildQuery(toString(), this);
+            return toString();            
+        }        
 
         public override Object evaluate(Object context) {
             // TfB_DebugLog.logVar('variable', variable);
@@ -292,6 +316,17 @@ public with sharing abstract class QueryExpression {
             }
         }
 
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            String query;
+            if (leftOperand == null) {
+                query = operator.toString() + ' ' + rightOperand.toQuery(queryPlugin);    
+            } else {
+                query = leftOperand.toQuery(queryPlugin) + ' ' + operator.toString() + ' ' + rightOperand.toQuery(queryPlugin);    
+            }
+
+            if (queryPlugin == null) return query;
+            else return queryPlugin.buildQuery(query, this);
+        }
 
         public Integer getOperatorPrecedence() {
             return operator.getPrecedence();
@@ -340,7 +375,7 @@ public with sharing abstract class QueryExpression {
                 // }
                 when '=', '!=', '<', '<=', '>', '>=' {
                 // when '<', '<=', '>', '>=' {
-                    return compare(operator.oprText, leftOpdVal, rightOpdVal);
+                    return compare(operator.oprText, leftOpdVal, rightOpdVal, this);
                 }
                 // when 'INCLUDES', 'EXCLUDES' {
                 //     throw new NotSupportedException('The given left (' + leftOpdVal + ') and right (' + rightOpdVal + ') operands are not supported for the LIKE operator.');
@@ -349,7 +384,8 @@ public with sharing abstract class QueryExpression {
                 //     throw new InvalidOperatorException('The ' + operator.oprText + ' is an invalid operator.');
                 // }
             }
-            throw new NotSupportedException('The given left (' + leftOpdVal + ') and right (' + rightOpdVal + ') operands are not supported for the ' + operator.oprText + ' operator.');
+            
+            throw new NotSupportedException('The given left (' + leftOpdVal + ') and right (' + rightOpdVal + ') operands are not supported for the ' + operator.oprText + ' operator for the "' + toString() + '" expression.');
 
 
         }
@@ -370,6 +406,12 @@ public with sharing abstract class QueryExpression {
 
         public override String toString() {
             return '(' + groupExpr.toString() + ')';
+        }
+
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            String query = '(' + groupExpr.toQuery(queryPlugin) + ')';
+            if (queryPlugin == null) return query;
+            else return queryPlugin.buildQuery(query, this);
         }
 
         public override Object evaluate(Object context) {
@@ -403,6 +445,17 @@ public with sharing abstract class QueryExpression {
             return '(' + String.join(params, ', ') + ')';
         }
 
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            List<String> params = new List<String>();
+            for (QueryExpression paramExpr : paramExprList) {
+                params.add(paramExpr.toQuery(queryPlugin));
+            }
+
+            String query = '(' + String.join(params, ', ') + ')';
+            if (queryPlugin == null) return query;
+            else return queryPlugin.buildQuery(query, this);
+        }
+
         public override Object evaluate(Object context) {
             List<Object> valueList = new List<Object>();
             for (QueryExpression paramExpr : paramExprList) {
@@ -415,17 +468,17 @@ public with sharing abstract class QueryExpression {
     /**
      * @description Collection Expression, e.g. ('ab', 'bc')
      */
-    public class FuctionExpr extends QueryExpression {
+    public class FunctionExpr extends QueryExpression {
         public String functionName;
         public QueryExpression[] paramExprList;
 
-        public FuctionExpr(String functionName, IExpressionProcessorPlugin plugin) {
+        public FunctionExpr(String functionName, IExpressionProcessorPlugin plugin) {
             this.plugin = plugin;
             this.functionName = functionName;
             paramExprList = new List<QueryExpression>();
         }
 
-        // public FuctionExpr(QueryExpression operand) {
+        // public FunctionExpr(QueryExpression operand) {
         //     this();
         //     this.groupExpr = operand;
         //     this.groupExpr.parent = this;
@@ -438,6 +491,17 @@ public with sharing abstract class QueryExpression {
             }
 
             return functionName + '(' + String.join(params, ', ') + ')';
+        }
+
+        public override String toQuery(IExpressionQueryPlugin queryPlugin) {
+            List<String> params = new List<String>();
+            for (QueryExpression paramExpr : paramExprList) {
+                params.add(paramExpr.toQuery(queryPlugin));
+            }
+
+            String query = functionName + '(' + String.join(params, ', ') + ')';
+            if (queryPlugin == null) return query;
+            else return queryPlugin.buildQuery(query, this);
         }
 
         public override Object evaluate(Object context) {

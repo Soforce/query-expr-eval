@@ -148,7 +148,7 @@ private class QueryExpressionTest {
         }
 
         try {
-            QueryExpression.FuctionExpr funcExpr = new QueryExpression.FuctionExpr('NAOPR', null);
+            QueryExpression.FunctionExpr funcExpr = new QueryExpression.FunctionExpr('NAOPR', null);
             funcExpr.evaluate();
         } catch (Exception ex) {
             System.debug(ex.getMessage());
@@ -162,20 +162,20 @@ private class QueryExpressionTest {
             logicalExpr.evaluate();
 
             logicalExpr = new QueryExpression.LogicalExpr(null, '>', null);
-            logicalExpr.compare('>', null, null);
+            logicalExpr.compare('>', null, null, logicalExpr);
         } catch (Exception ex) {
             System.debug(ex.getMessage());
         } 
         try {
             QueryExpression.LogicalExpr logicalExpr = new QueryExpression.LogicalExpr(null, '>', null);
-            logicalExpr.compare('>', 'abc', null);
+            logicalExpr.compare('>', 'abc', null, logicalExpr);
 
         } catch (Exception ex) {
             System.debug(ex.getMessage());
         }  
         try {
             QueryExpression.LogicalExpr logicalExpr = new QueryExpression.LogicalExpr(null, '>', null);
-            logicalExpr.getDataType(new QueryExpression.FuctionExpr('NAOPR', null));
+            logicalExpr.getDataType(new QueryExpression.FunctionExpr('NAOPR', null));
 
         } catch (Exception ex) {
             System.debug(ex.getMessage());
