@@ -31,13 +31,13 @@ The QueryExpression class constructs and evaluates a query’s logical expressio
 
 ### QueryExpression Methods
 
-* [build(expr)](#buildexpr) 
+* [build(expr)](#buildexpr)   
   Parse the query expression string.
-* [build(expr, plugin)](#buildexpr-plugin)
+* [build(expr, plugin)](#buildexpr-plugin)  
   Parse the query expression string.
-* [evaluate(ctx)](#evaluatectx)
+* [evaluate(ctx)](#evaluatectx)  
   Return the evaluated result for the given expression and context object.
-* [toQuery(queryPlugin)](#toqueryqueryplugin) 
+* [toQuery(queryPlugin)](#toqueryqueryplugin)   
   build the query string with the given queryPlugin.
 
 #### build(expr)
